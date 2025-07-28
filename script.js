@@ -402,3 +402,45 @@ document.getElementById('multiExcelBtn').onclick = function () {
     a.download = "receivers.csv";
     a.click();
 };
+printBtn.onclick = function () {
+    let labelHtml = labelPreview.innerHTML;
+    let printWindow = window.open('', '', 'width=500,height=550');
+    let style = `<style>
+        body{font-family:'Segoe UI',Arial,sans-serif;}
+        .labelBox{margin-bottom:18px; border:2px solid #1789fa; border-radius:7px; padding:13px 10px; max-width:99vw;}
+        .labelBox b{font-size:1.02em;}
+    </style>`;
+    printWindow.document.write(`<html><head><title>Print Label</title>${style}</head><body><div class='labelBox'>${labelHtml}</div></body></html>`);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 450);
+};
+pdfBtn.onclick = function () {
+    const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+    if (!jsPDF) {
+        alert("jsPDF library लोड नहीं हुई!");
+        return;
+    }
+    let d = {
+        name: receiverForm.receiverName.value.trim() || "Name",
+        address: receiverForm.receiverAddress.value.trim() || "Address",
+        mobile: receiverForm.receiverMobile.value.trim() || "Mobile",
+        pin: receiverForm.receiverPin.value.trim() || "Pin",
+        city: receiverForm.receiverCity.value.trim() || "City",
+        state: receiverForm.receiverState.value.trim() || "State"
+    };
+    let sender = senderListArr[selectedSenderIndex] || {};
+    let doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a6" });
+    let y = 12;
+    doc.setFontSize(13);
+    doc.text("To:", 10, y); y += 5;
+    doc.text(d.name, 12, y); y += 5;
+    doc.text(d.address, 12, y); y += 5;
+    doc.text(`${d.city}, ${d.state} - ${d.pin}`, 12, y); y += 5;
+    doc.text("Mobile: " + d.mobile, 12, y); y += 7;
+    doc.text("From:", 10, y); y += 5;
+    doc.text(sender.name || "Sender Name", 12, y); y += 5;
+    doc.text(sender.address || "Sender Address", 12, y); y += 5;
+    doc.text(`${sender.city || "Sender City"}, ${sender.state || "Sender State"} - ${sender.pin || "Pin"}`, 12, y); y += 5;
+    doc.text("Mobile: " + (sender.mobile || "Sender Mobile"), 12, y);
+    doc.save("label.pdf");
+};
