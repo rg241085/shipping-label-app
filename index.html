@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Shipping Label Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="main-flex3">
+        <!-- Receiver Master -->
+        <div class="card receiver-master-box">
+            <h2>Receiver Master</h2>
+            <form id="receiverForm" autocomplete="off">
+                <input type="hidden" id="receiverIndex">
+                <input type="text" id="receiverName" placeholder="Name" required>
+                <textarea id="receiverAddress" placeholder="Address" required></textarea>
+                <input type="text" id="receiverMobile" placeholder="Mobile Number" required maxlength="15">
+                <input type="text" id="receiverPin" placeholder="Pin code" required maxlength="10">
+                <input type="text" id="receiverCity" placeholder="City" required>
+                <!-- <input type="text" id="receiverState" placeholder="State" required> -->
+                <!-- Old -->
+                <!-- <input type="text" id="receiverState" placeholder="State" required> -->
+
+                <!-- New -->
+                <select id="receiverState" required>
+                    <option value="">State चुनें</option>
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                    <option value="Assam">Assam</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                    <option value="Jharkhand">Jharkhand</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Manipur">Manipur</option>
+                    <option value="Meghalaya">Meghalaya</option>
+                    <option value="Mizoram">Mizoram</option>
+                    <option value="Nagaland">Nagaland</option>
+                    <option value="Odisha">Odisha</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Sikkim">Sikkim</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Tripura">Tripura</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Uttarakhand">Uttarakhand</option>
+                    <option value="West Bengal">West Bengal</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                    <option value="Ladakh">Ladakh</option>
+                    <option value="Puducherry">Puducherry</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <div class="button-row">
+                    <button type="button" id="saveReceiverBtn" class="primary">Save Receiver</button>
+                    <button type="button" id="saveUseReceiverBtn" class="primary">Save &amp; Use</button>
+                    <button type="reset">Clear</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Label Preview -->
+        <div class="card label-preview-box">
+            <h2>Label Preview</h2>
+            <div id="labelPreviewWrap">
+                <div id="labelPreview"></div>
+            </div>
+            <div class="button-row">
+                <button id="pdfBtn" class="primary">PDF</button>
+                <button id="printBtn" class="primary">Print</button>
+            </div>
+        </div>
+
+        <!-- Sender Master -->
+        <div class="card sender-list-box">
+            <h2>Sender Master</h2>
+            <!-- <input type="text" id="senderSearch" placeholder="Search sender..."> -->
+            <div class="sender-search-wrap">
+                <input type="text" id="senderSearch" placeholder="Search sender...">
+                <span class="sender-search-icon">🔍</span>
+            </div>
+
+            <div id="senderList"></div>
+            <div class="button-row">
+                <button id="addSenderBtn" class="primary" type="button">+ Add Sender</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Receiver List -->
+    <!-- Saved Receiver List (Table Style) -->
+    <div class="card  receiver-list-section">
+        <h3>Saved Receivers</h3>
+        <!-- <input type="text" id="receiverSearch" placeholder="Search..."> -->
+        <div class="multi-action-row">
+            <input type="text" id="receiverSearch" placeholder="Search...">
+            <button id="multiPrintBtn" class="primary">Print Selected</button>
+            <button id="multiPdfBtn" class="primary">PDF Selected</button>
+            <button id="multiExcelBtn" class="primary">Export Excel</button>
+        </div>
+
+        <div class="table-wrap">
+            <table id="receiverTable">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllReceivers"></th> <!-- ALL select -->
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>City</th>
+                        <th>Pin</th>
+                        <th>State</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="receiverList"></tbody>
+            </table>
+
+
+        </div>
+    </div>
+
+
+    <!-- Sender Modal -->
+    <div id="senderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeSenderModal">&times;</span>
+            <h3 id="senderModalTitle">Add Sender</h3>
+            <form id="senderForm" autocomplete="off">
+                <input type="hidden" id="senderIndex">
+                <input type="text" id="senderName" placeholder="Name" required>
+                <textarea id="senderAddress" placeholder="Address" required></textarea>
+                <input type="text" id="senderMobile" placeholder="Mobile Number" required maxlength="15">
+                <input type="text" id="senderPin" placeholder="Pin code" required maxlength="10">
+                <input type="text" id="senderCity" placeholder="City" required>
+                <!-- <input type="text" id="senderState" placeholder="State" required> -->
+                <!-- Old -->
+                <!-- <input type="text" id="receiverState" placeholder="State" required> -->
+
+                <!-- New -->
+                <select id="senderState" required>
+                    <option value="">State चुनें</option>
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                    <option value="Assam">Assam</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                    <option value="Jharkhand">Jharkhand</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Manipur">Manipur</option>
+                    <option value="Meghalaya">Meghalaya</option>
+                    <option value="Mizoram">Mizoram</option>
+                    <option value="Nagaland">Nagaland</option>
+                    <option value="Odisha">Odisha</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Sikkim">Sikkim</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Tripura">Tripura</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Uttarakhand">Uttarakhand</option>
+                    <option value="West Bengal">West Bengal</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                    <option value="Ladakh">Ladakh</option>
+                    <option value="Puducherry">Puducherry</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <div class="button-row">
+                    <button type="submit" class="primary">Save Sender</button>
+                    <button type="reset">Clear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

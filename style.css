@@ -1,0 +1,609 @@
+body {
+    background: #f7fafb;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+.main-flex3 {
+    display: flex;
+    gap: 2%;
+    justify-content: center;
+    align-items: stretch;
+    margin: 26px auto 0 auto;
+    max-width: 1400px;
+    min-height: 420px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 15px #e0e8f3;
+    padding: 22px 16px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+
+}
+
+.receiver-master-box,
+.sender-list-box,
+.label-preview-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 470px;
+}
+
+.receiver-master-box,
+.sender-list-box {
+    width: 28%;
+    min-width: 260px;
+    max-width: 410px;
+}
+
+.label-preview-box {
+    width: 34%;
+    min-width: 260px;
+    max-width: 520px;
+}
+
+#receiverForm input,
+#receiverForm textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.2px solid #b0bfc9;
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    margin-top: 1PX;
+}
+
+#receiverForm textarea {
+    resize: vertical;
+    min-height: 32px;
+    max-height: 90px;
+}
+
+.receiver-master-box h2,
+.sender-list-box h2 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.button-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+button {
+    background: #eef1f5;
+    color: #204967;
+    padding: 7px 13px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.13s;
+}
+
+button.primary {
+    background: #1789fa;
+    color: #fff;
+}
+
+button:hover {
+    opacity: .97;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+    border-color: #1789fa;
+    box-shadow: 0 0 3px #1789fa44;
+}
+
+#labelPreviewWrap {
+    background: #f4f8fb;
+    border-radius: 12px;
+    padding: 12px 6px;
+    margin: 12px 0 8px 0;
+    min-height: 150px;
+    width: 100%;
+    box-shadow: 0 1px 7px #e3eefa;
+    flex: 1 1 auto;
+}
+
+#labelPreview {
+    background: #fff;
+    border: 2px solid #7ea9e8;
+    border-radius: 10px;
+    padding: 14px 10px;
+    max-width: 380px;
+    min-height: 80px;
+    font-size: 1.02rem;
+    margin: 0 auto;
+    text-align: left;
+}
+
+/* .receiver-list-section {
+    width: 92vw;
+    max-width: 1300px;
+    margin: 10px auto 30px auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 15px #e0e8f3;
+    padding: 18px 13px;
+    min-height: 260px;
+} */
+
+#receiverList,
+#senderList {
+    margin-top: 8px;
+}
+
+.sender-entry,
+.receiver-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border-bottom: 1px solid #e1e1e1;
+    padding: 10px 6px;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+
+.sender-entry:hover,
+.receiver-entry:hover {
+    background: #f0f6ff;
+    border-radius: 6px;
+}
+
+.sender-radio,
+.receiver-radio {
+    accent-color: #1789fa;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+}
+
+.sender-info,
+.receiver-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.sender-info span,
+.receiver-info span {
+    font-weight: 600;
+    color: #204967;
+}
+
+.sender-info small,
+.receiver-info small {
+    color: #444a;
+    font-size: 0.98em;
+}
+
+.sender-actions,
+.receiver-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.sender-actions button,
+.receiver-actions button {
+    padding: 2px 7px;
+    font-size: 1em;
+    background: #f4f6fb;
+    color: #194c6d;
+    border: 1px solid #e0e0e0;
+}
+
+.sender-actions button:hover,
+.receiver-actions button:hover {
+    background: #cde4fa;
+}
+
+/* ---- Modal ---- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.modal-content {
+    background: #fff;
+    margin: 60px auto;
+    padding: 18px 22px;
+    border: 2px solid #193b4c;
+    border-radius: 22px;
+    width: 98%;
+    max-width: 390px;
+    position: relative;
+    animation: fadeIn .3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-35px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.close {
+    position: absolute;
+    top: 8px;
+    right: 18px;
+    font-size: 1.7rem;
+    cursor: pointer;
+    color: #193b4c;
+}
+
+.close:hover {
+    color: #1789fa;
+}
+
+#senderForm input,
+#senderForm textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.2px solid #b0bfc9;
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+#senderForm textarea {
+    resize: vertical;
+    min-height: 32px;
+    max-height: 90px;
+}
+
+#senderForm input:focus,
+#senderForm textarea:focus {
+    outline: none;
+    border-color: #1789fa;
+    box-shadow: 0 0 3px #1789fa44;
+}
+
+@media (max-width: 1200px) {
+    .main-flex3 {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .receiver-master-box,
+    .sender-list-box,
+    .label-preview-box {
+        width: 96vw;
+        max-width: 99vw;
+        min-width: 170px;
+    }
+
+    .receiver-list-section {
+        max-width: 99vw;
+
+    }
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+th,
+td {
+    border-bottom: 1px solid #e2e2e2;
+    padding: 6px 7px;
+    font-size: .97rem;
+    text-align: left;
+}
+
+th {
+    background: #e7f1fa;
+}
+
+td:last-child,
+th:last-child {
+    text-align: center;
+}
+
+.addressAction {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+}
+
+.addressAction button {
+    padding: 2px 7px;
+    font-size: 0.89rem;
+}
+
+.sender-list-box {
+    height: 520px;
+    /* जितनी height चाहिए उतनी रखें */
+    min-height: 470px;
+    max-height: 470px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Sender List scrollable */
+#senderList {
+    flex: 1 1 auto;
+    min-height: 80px;
+    max-height: 340px;
+    /* यह height अपने हिसाब से adjust कर सकते हैं */
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding-right: 4px;
+}
+
+.sender-search-wrap {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+#senderSearch {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.8px solid #d3e3fa;
+    border-radius: 30px;
+    padding: 8px 38px 8px 14px;
+    font-size: 1rem;
+    background: #f7fafb;
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+    margin-bottom: 0;
+    box-shadow: 0 1px 8px #e2eafc70;
+}
+
+#senderSearch:focus {
+    border: 1.8px solid #1789fa;
+    background: #fff;
+    box-shadow: 0 2px 12px #1789fa33;
+}
+
+.sender-search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #1789fa;
+    font-size: 1.12em;
+    opacity: 0.77;
+    pointer-events: none;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    background: #f7fafb;
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+#receiverTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 18px #e0e8f34d;
+}
+
+#receiverTable th,
+#receiverTable td {
+    padding: 10px 11px;
+    font-size: 1.01rem;
+    text-align: left;
+    border-bottom: 1px solid #e4e8ee;
+}
+
+#receiverTable th {
+    background: #e9f1fa;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #1e3859;
+    border-bottom: 2px solid #d7e7fd;
+}
+
+#receiverTable tr:last-child td {
+    border-bottom: none;
+}
+
+#receiverTable tr:hover td {
+    background: #f6fbff;
+}
+
+#receiverTable td:last-child,
+#receiverTable th:last-child {
+    text-align: center;
+}
+
+.addressAction {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.addressAction button {
+    padding: 4px 11px;
+    font-size: 0.96rem;
+    background: #e3f0ff;
+    color: #1789fa;
+    border: none;
+    border-radius: 6px;
+    transition: 0.14s;
+    box-shadow: 0 1px 4px #e0e8f388;
+    cursor: pointer;
+}
+
+.addressAction button:hover {
+    background: #1789fa;
+    color: #fff;
+    box-shadow: 0 2px 9px #1789fa22;
+}
+
+#receiverSearch {
+    width: 260px;
+    max-width: 94vw;
+    margin-bottom: 4px;
+    margin-top: 4px;
+    padding: 8px 13px;
+    border-radius: 20px;
+    border: 1.2px solid #c7daed;
+    background: #f8fbfd;
+    font-size: 1rem;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+#receiverSearch:focus {
+    border: 1.5px solid #1789fa;
+    background: #fff;
+    box-shadow: 0 2px 8px #1789fa11;
+}
+
+/* Existing input styling */
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border: 1.3px solid #cdd7e1;
+    border-radius: 8px;
+    font-size: 1.07em;
+    background: #fafdff;
+    outline: none;
+    box-sizing: border-box;
+    transition: border 0.23s;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #1789fa;
+}
+
+.multi-action-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.multi-action-row input[type="text"] {
+    flex: 1 1 230px;
+    min-width: 170px;
+    max-width: 270px;
+    padding: 10px 15px;
+    border-radius: 22px;
+    border: 1.3px solid #cdd7e1;
+    background: #fafdff;
+    font-size: 1em;
+    outline: none;
+    transition: border 0.22s;
+}
+
+.multi-action-row input[type="text"]:focus {
+    border-color: #1789fa;
+}
+
+.main-flex3 {
+    display: flex;
+    gap: 2%;
+    justify-content: center;
+    align-items: stretch;
+    margin: 26px auto 0 auto;
+    max-width: 1400px;
+    min-height: 420px;
+}
+
+.receiver-list-section {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 15px #e0e8f3;
+    padding: 22px 18px 22px 18px;
+    margin: 20px auto 20px auto;
+    width: 90%;
+    max-width: 1350px;
+    /* ऊपर वाले तीनों card की जितनी चौड़ाई हो उतना रखें */
+    min-width: 300px;
+    /* आप अपनी cards की max-width के हिसाब से change कर सकते हैं */
+}
+
+/* Responsive: */
+@media (max-width: 1200px) {
+    .main-flex3 {
+        flex-direction: column;
+        align-items: stretch;
+        max-width: 98vw;
+    }
+
+    .receiver-list-section {
+        width: 97vw;
+        max-width: 99vw;
+        padding: 16px 4px;
+    }
+}
+
+.multi-action-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.multi-action-row input[type="text"] {
+    flex: 1 1 230px;
+    min-width: 140px;
+    max-width: 270px;
+    padding: 10px 15px;
+    border-radius: 22px;
+    border: 1.3px solid #cdd7e1;
+    background: #fafdff;
+    font-size: 1em;
+    outline: none;
+    transition: border 0.22s;
+}
+
+.multi-action-row input[type="text"]:focus {
+    border-color: #1789fa;
+}
+
+.multi-action-row button {
+    white-space: nowrap;
+    min-width: 120px;
+    text-align: center;
+}
+
+/* ... बाकी आपकी पुरानी CSS वैसी ही रखें ... */
