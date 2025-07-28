@@ -1,15 +1,53 @@
-// ======== Utility Functions ========
-function getData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
-function setData(key, arr) { localStorage.setItem(key, JSON.stringify(arr)); }
+// ==== Firebase SDK & Firestore =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ---- Receiver Master ----
+// ============ FILL YOUR CONFIG =============
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyAHEmynzgATruM4urv8LANZrbPmtSvxM9s",
+    authDomain: "shipping-label-app-2495f.firebaseapp.com",
+    projectId: "shipping-label-app-2495f",
+    storageBucket: "shipping-label-app-2495f.firebasestorage.app",
+    messagingSenderId: "795393678883",
+    appId: "1:795393678883:web:7ea82e207d672cffe21b96"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ========== Utility Firestore Functions ==========
+async function getAllFromFirestore(colName) {
+    const snapshot = await getDocs(collection(db, colName));
+    let arr = [];
+    snapshot.forEach(doc => arr.push({ ...doc.data(), id: doc.id }));
+    return arr;
+}
+async function addToFirestore(colName, data) {
+    const ref = await addDoc(collection(db, colName), data);
+    return ref.id;
+}
+async function updateInFirestore(colName, id, data) {
+    await setDoc(doc(db, colName, id), data);
+}
+async function deleteFromFirestore(colName, id) {
+    await deleteDoc(doc(db, colName, id));
+}
+
+// ---- DOM Elements ----
 const receiverForm = document.getElementById('receiverForm');
 const saveReceiverBtn = document.getElementById('saveReceiverBtn');
 const saveUseReceiverBtn = document.getElementById('saveUseReceiverBtn');
 const receiverList = document.getElementById('receiverList');
 const receiverSearch = document.getElementById('receiverSearch');
 
-// ---- Sender Master ----
 const senderList = document.getElementById('senderList');
 const senderSearch = document.getElementById('senderSearch');
 const senderModal = document.getElementById('senderModal');
@@ -18,16 +56,17 @@ const closeSenderModal = document.getElementById('closeSenderModal');
 const senderForm = document.getElementById('senderForm');
 const senderModalTitle = document.getElementById('senderModalTitle');
 
-// ---- Label Preview ----
 const labelPreview = document.getElementById('labelPreview');
 const pdfBtn = document.getElementById('pdfBtn');
 const printBtn = document.getElementById('printBtn');
 
 let lastUsedReceiverIndex = null;
-let selectedSenderIndex = 0; // Default sender
+let selectedSenderIndex = 0;
+let receiverListArr = [];
+let senderListArr = [];
+let selectedReceiverIndexes = [];
 
 // ========== RECEIVER LOGIC ==========
-// Live Label Preview
 function updateLabelPreviewWithForm() {
     let d = {
         name: receiverForm.receiverName.value.trim(),
@@ -37,8 +76,7 @@ function updateLabelPreviewWithForm() {
         city: receiverForm.receiverCity.value.trim(),
         state: receiverForm.receiverState.value.trim()
     };
-    let sArr = getData('senders');
-    let sender = sArr[selectedSenderIndex] || {};
+    let sender = senderListArr[selectedSenderIndex] || {};
     labelPreview.innerHTML =
         `<b>To:</b><br>
     <b>${d.name || 'Name'}</b><br>
@@ -55,57 +93,11 @@ function updateLabelPreviewWithForm() {
     document.getElementById(id).addEventListener('input', updateLabelPreviewWithForm);
 });
 
-// Save Receiver (Only Save)
-saveReceiverBtn.onclick = function () { saveReceiver(false); };
-saveUseReceiverBtn.onclick = function () { saveReceiver(true); };
-
-function saveReceiver(useAfter) {
-    const d = {
-        name: receiverForm.receiverName.value.trim(),
-        address: receiverForm.receiverAddress.value.trim(),
-        mobile: receiverForm.receiverMobile.value.trim(),
-        pin: receiverForm.receiverPin.value.trim(),
-        city: receiverForm.receiverCity.value.trim(),
-        state: receiverForm.receiverState.value.trim()
-    };
-    // ---------- Validation ----------
-    if (!d.name || !d.address || !d.mobile || !d.pin || !d.city || !d.state) {
-        alert("सभी फ़ील्ड भरें (All fields must be filled)");
-        return;
-    }
-    if (!/^\d{10}$/.test(d.mobile)) {
-        alert("Mobile Number 10 digit का और Numeric होना चाहिए");
-        receiverForm.receiverMobile.focus();
-        return;
-    }
-    if (!/^\d{6}$/.test(d.pin)) {
-        alert("Pin Code 6 digit का और Numeric होना चाहिए");
-        receiverForm.receiverPin.focus();
-        return;
-    }
-    // -------------------------------
-    let arr = getData('receivers');
-    const idx = receiverForm.receiverIndex.value;
-    let newIdx;
-    if (idx !== '') { arr[+idx] = d; newIdx = +idx; }
-    else { arr.push(d); newIdx = arr.length - 1; }
-    setData('receivers', arr); showReceiversList(receiverSearch.value);
-    if (useAfter) { lastUsedReceiverIndex = newIdx; fillFormWithReceiver(newIdx); }
-    else { lastUsedReceiverIndex = null; }
-    receiverForm.reset(); receiverForm.receiverIndex.value = '';
-    updateLabelPreviewWithForm();
-}
-receiverForm.onreset = function () {
-    receiverForm.receiverIndex.value = '';
-    lastUsedReceiverIndex = null;
-    updateLabelPreviewWithForm();
-};
-
-// Receiver List Table View
-function showReceiversList(filter = '') {
-    const arr = getData('receivers');
+// --- Show Receivers List (Firestore से) ---
+async function showReceiversList(filter = '') {
+    receiverListArr = await getAllFromFirestore('receivers');
     receiverList.innerHTML = '';
-    arr.filter(receiver =>
+    receiverListArr.filter(receiver =>
         receiver.name.toLowerCase().includes(filter.toLowerCase()) ||
         receiver.mobile.toLowerCase().includes(filter.toLowerCase()) ||
         receiver.city.toLowerCase().includes(filter.toLowerCase()) ||
@@ -114,7 +106,7 @@ function showReceiversList(filter = '') {
     ).forEach((receiver, i) => {
         let tr = document.createElement('tr');
         tr.innerHTML = `
-        <td><input type="checkbox" class="receiver-checkbox" value="${i}"></td>
+            <td><input type="checkbox" class="receiver-checkbox" value="${i}"></td>
             <td>${receiver.name}</td>
             <td>${receiver.mobile}</td>
             <td>${receiver.city}</td>
@@ -131,20 +123,17 @@ function showReceiversList(filter = '') {
         receiverList.appendChild(tr);
     });
 }
-
 window.editReceiver = function (i) {
-    const arr = getData('receivers');
+    const d = receiverListArr[i];
     fillFormWithReceiver(i);
     receiverForm.receiverIndex.value = i;
     receiverForm.receiverName.focus();
 }
-// --------- 2-Step Delete Warning (Receiver) -----------
-window.deleteReceiver = function (i) {
+window.deleteReceiver = async function (i) {
     if (!confirm("क्या आप वाकई इस Receiver को डिलीट करना चाहते हैं?")) return;
     if (!confirm("फिर से कन्फर्म करें — Receiver डिलीट हो जाएगा!")) return;
-    let arr = getData('receivers');
-    arr.splice(i, 1); setData('receivers', arr); showReceiversList(receiverSearch.value);
-    if (lastUsedReceiverIndex == i) lastUsedReceiverIndex = null;
+    await deleteFromFirestore('receivers', receiverListArr[i].id);
+    showReceiversList(receiverSearch.value);
     updateLabelPreviewWithForm();
 }
 window.useReceiver = function (i) {
@@ -152,8 +141,7 @@ window.useReceiver = function (i) {
     lastUsedReceiverIndex = i;
 }
 function fillFormWithReceiver(i) {
-    const arr = getData('receivers');
-    const d = arr[i];
+    const d = receiverListArr[i];
     receiverForm.receiverIndex.value = i;
     receiverForm.receiverName.value = d.name;
     receiverForm.receiverAddress.value = d.address;
@@ -167,11 +155,52 @@ receiverSearch.oninput = function () { showReceiversList(receiverSearch.value); 
 showReceiversList();
 updateLabelPreviewWithForm();
 
-// ========== SENDER MASTER CARD VIEW ==========
-function showSenders(filter = '') {
-    const arr = getData('senders');
+saveReceiverBtn.onclick = function () { saveReceiver(false); };
+saveUseReceiverBtn.onclick = function () { saveReceiver(true); };
+async function saveReceiver(useAfter) {
+    const d = {
+        name: receiverForm.receiverName.value.trim(),
+        address: receiverForm.receiverAddress.value.trim(),
+        mobile: receiverForm.receiverMobile.value.trim(),
+        pin: receiverForm.receiverPin.value.trim(),
+        city: receiverForm.receiverCity.value.trim(),
+        state: receiverForm.receiverState.value.trim()
+    };
+    if (!d.name || !d.address || !d.mobile || !d.pin || !d.city || !d.state) {
+        alert("सभी फ़ील्ड भरें (All fields must be filled)");
+        return;
+    }
+    if (!/^\d{10}$/.test(d.mobile)) {
+        alert("Mobile Number 10 digit का और Numeric होना चाहिए");
+        receiverForm.receiverMobile.focus();
+        return;
+    }
+    if (!/^\d{6}$/.test(d.pin)) {
+        alert("Pin Code 6 digit का और Numeric होना चाहिए");
+        receiverForm.receiverPin.focus();
+        return;
+    }
+    const idx = receiverForm.receiverIndex.value;
+    if (idx !== '') {
+        await updateInFirestore('receivers', receiverListArr[idx].id, d);
+    } else {
+        await addToFirestore('receivers', d);
+    }
+    await showReceiversList(receiverSearch.value);
+    receiverForm.reset(); receiverForm.receiverIndex.value = '';
+    updateLabelPreviewWithForm();
+}
+receiverForm.onreset = function () {
+    receiverForm.receiverIndex.value = '';
+    lastUsedReceiverIndex = null;
+    updateLabelPreviewWithForm();
+};
+
+// ========== SENDER MASTER ==========
+async function showSenders(filter = '') {
+    senderListArr = await getAllFromFirestore('senders');
     senderList.innerHTML = '';
-    arr.filter(sender =>
+    senderListArr.filter(sender =>
         sender.name.toLowerCase().includes(filter.toLowerCase()) ||
         sender.mobile.toLowerCase().includes(filter.toLowerCase()) ||
         sender.city.toLowerCase().includes(filter.toLowerCase()) ||
@@ -201,20 +230,16 @@ window.selectSender = function (i) {
     updateLabelPreviewWithForm();
 }
 window.editSender = function (i) { openSenderModal(true, i); }
-// --------- 2-Step Delete Warning (Sender) -----------
-window.deleteSender = function (i) {
+window.deleteSender = async function (i) {
     if (!confirm("क्या आप वाकई इस Sender को डिलीट करना चाहते हैं?")) return;
     if (!confirm("फिर से कन्फर्म करें — Sender डिलीट हो जाएगा!")) return;
-    let arr = getData('senders');
-    arr.splice(i, 1); setData('senders', arr); showSenders(senderSearch.value);
-    if (selectedSenderIndex == i) selectedSenderIndex = 0;
-    showSenders(senderSearch.value);
+    await deleteFromFirestore('senders', senderListArr[i].id);
+    await showSenders(senderSearch.value);
     updateLabelPreviewWithForm();
 }
 senderSearch.oninput = function () { showSenders(senderSearch.value); }
 showSenders();
 
-// Sender Modal
 addSenderBtn.onclick = () => openSenderModal(false);
 closeSenderModal.onclick = () => closeModal();
 window.onclick = function (e) { if (e.target == senderModal) closeModal(); }
@@ -224,8 +249,7 @@ function openSenderModal(isEdit, idx) {
     senderForm.senderIndex.value = '';
     senderModalTitle.textContent = isEdit ? "Edit Sender" : "Add Sender";
     if (isEdit) {
-        const arr = getData('senders');
-        const d = arr[idx];
+        const d = senderListArr[idx];
         senderForm.senderIndex.value = idx;
         senderForm.senderName.value = d.name;
         senderForm.senderAddress.value = d.address;
@@ -241,8 +265,7 @@ function closeModal() {
     senderForm.reset();
     senderForm.senderIndex.value = '';
 }
-// ------- Sender Validation Added Here ---------
-senderForm.onsubmit = function (e) {
+senderForm.onsubmit = async function (e) {
     e.preventDefault();
     const d = {
         name: senderForm.senderName.value.trim(),
@@ -252,7 +275,6 @@ senderForm.onsubmit = function (e) {
         city: senderForm.senderCity.value.trim(),
         state: senderForm.senderState.value.trim()
     };
-    // ---- Validation ----
     if (!d.name || !d.address || !d.mobile || !d.pin || !d.city || !d.state) {
         alert("सभी फ़ील्ड भरें (All fields must be filled)");
         senderForm.senderName.focus();
@@ -268,84 +290,18 @@ senderForm.onsubmit = function (e) {
         senderForm.senderPin.focus();
         return;
     }
-    // ---- Save Logic as usual ----
-    let arr = getData('senders');
     const idx = senderForm.senderIndex.value;
-    if (idx !== '') { arr[+idx] = d; } else { arr.push(d); }
-    setData('senders', arr); showSenders(senderSearch.value);
+    if (idx !== '') {
+        await updateInFirestore('senders', senderListArr[idx].id, d);
+    } else {
+        await addToFirestore('senders', d);
+    }
+    await showSenders(senderSearch.value);
     closeModal();
 };
 senderForm.onreset = function () { senderForm.senderIndex.value = ''; };
 
-// ========== PDF & PRINT LABEL ==========
-printBtn.onclick = function () {
-    let sArr = getData('senders');
-    let sender = sArr[selectedSenderIndex] || {};
-    let d = {
-        name: receiverForm.receiverName.value.trim(),
-        address: receiverForm.receiverAddress.value.trim(),
-        mobile: receiverForm.receiverMobile.value.trim(),
-        pin: receiverForm.receiverPin.value.trim(),
-        city: receiverForm.receiverCity.value.trim(),
-        state: receiverForm.receiverState.value.trim()
-    };
-    let html =
-        `<b>To:</b><br>
-    <b>${d.name || 'Name'}</b><br>
-    ${d.address || 'Address'}<br>
-    ${d.city || 'City'}, ${d.state || 'State'} - ${d.pin || 'Pin'}<br>
-    <b>Mobile:</b> ${d.mobile || 'Mobile'}<br><br>
-    <b>From:</b><br>
-    <b>${sender.name || 'Sender Name'}</b><br>
-    ${sender.address || 'Sender Address'}<br>
-    ${sender.city || 'Sender City'}, ${sender.state || 'Sender State'} - ${sender.pin || 'Pin'}<br>
-    <b>Mobile:</b> ${sender.mobile || 'Sender Mobile'}`;
-
-    let printWindow = window.open('', '', 'width=600,height=400');
-    let style = `<style>
-      body{font-family:'Segoe UI',Arial,sans-serif;}
-      .labelBox{border:2px solid #1789fa;border-radius:7px;padding:13px 10px;max-width:99vw;}
-      .labelBox b{font-size:1.02em;}
-    </style>`;
-    printWindow.document.write(`<html><head><title>Print Label</title>${style}</head><body>
-      <div class="labelBox">${html}</div>
-      </body></html>`);
-    printWindow.document.close();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 350);
-};
-pdfBtn.onclick = function () {
-    const { jsPDF } = window.jspdf;
-    let doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a6" });
-    let sArr = getData('senders');
-    let sender = sArr[selectedSenderIndex] || {};
-    let d = {
-        name: receiverForm.receiverName.value.trim(),
-        address: receiverForm.receiverAddress.value.trim(),
-        mobile: receiverForm.receiverMobile.value.trim(),
-        pin: receiverForm.receiverPin.value.trim(),
-        city: receiverForm.receiverCity.value.trim(),
-        state: receiverForm.receiverState.value.trim()
-    };
-    let y = 12;
-    doc.setFontSize(13);
-    doc.text("To:", 10, y); y += 5;
-    doc.text(d.name || '', 12, y); y += 5;
-    doc.text(d.address || '', 12, y); y += 5;
-    doc.text(`${d.city || ''}, ${d.state || ''} - ${d.pin || ''}`, 12, y); y += 5;
-    doc.text("Mobile: " + (d.mobile || ''), 12, y); y += 7;
-    doc.text("From:", 10, y); y += 5;
-    doc.text(sender.name || '', 12, y); y += 5;
-    doc.text(sender.address || '', 12, y); y += 5;
-    doc.text(`${sender.city || ''}, ${sender.state || ''} - ${sender.pin || ''}`, 12, y); y += 5;
-    doc.text("Mobile: " + (sender.mobile || ''), 12, y);
-    doc.save("shipping-label.pdf");
-};
-
-
-// ======== MULTI SELECT RECEIVER LOGIC ========
-
-let selectedReceiverIndexes = [];
-
+// ==== MULTI SELECT RECEIVER LOGIC (Firestore Array से) ====
 // Table row checkbox
 receiverList.onclick = function (e) {
     if (e.target.classList.contains('receiver-checkbox')) {
@@ -378,12 +334,10 @@ function highlightSelectedRows() {
 
 // ==== MULTI PRINT ====
 document.getElementById('multiPrintBtn').onclick = function () {
-    let receivers = getData('receivers');
-    let senders = getData('senders');
-    let sender = senders[selectedSenderIndex] || {};
     let allLabels = "";
     selectedReceiverIndexes.forEach(idx => {
-        let d = receivers[idx];
+        let d = receiverListArr[idx];
+        let sender = senderListArr[selectedSenderIndex] || {};
         allLabels += `<div class="labelBox" style="margin-bottom: 18px; border:2px solid #1789fa;border-radius:7px;padding:13px 10px;">
             <b>To:</b><br>
             <b>${d.name || 'Name'}</b><br>
@@ -416,14 +370,12 @@ document.getElementById('multiPrintBtn').onclick = function () {
 document.getElementById('multiPdfBtn').onclick = function () {
     const { jsPDF } = window.jspdf;
     let doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a6" });
-    let receivers = getData('receivers');
-    let senders = getData('senders');
-    let sender = senders[selectedSenderIndex] || {};
     let first = true;
     selectedReceiverIndexes.forEach(idx => {
         if (!first) doc.addPage();
         first = false;
-        let d = receivers[idx];
+        let d = receiverListArr[idx];
+        let sender = senderListArr[selectedSenderIndex] || {};
         let y = 12;
         doc.setFontSize(13);
         doc.text("To:", 10, y); y += 5;
@@ -442,10 +394,9 @@ document.getElementById('multiPdfBtn').onclick = function () {
 
 // ==== MULTI EXCEL (CSV) ====
 document.getElementById('multiExcelBtn').onclick = function () {
-    let receivers = getData('receivers');
     let csv = "Name,Mobile,Address,City,Pin,State\n";
     selectedReceiverIndexes.forEach(idx => {
-        let d = receivers[idx];
+        let d = receiverListArr[idx];
         csv += `"${d.name}","${d.mobile}","${d.address}","${d.city}","${d.pin}","${d.state}"\n`;
     });
     let blob = new Blob([csv], { type: "text/csv" });
