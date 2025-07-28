@@ -1,33 +1,25 @@
-// ==== Firebase SDK & Firestore =====
+// ==== Firebase SDK & Firestore CDN IMPORTS =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ============ FILL YOUR CONFIG =============
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// ====== Firebase CONFIG =======
 const firebaseConfig = {
     apiKey: "AIzaSyAHEmynzgATruM4urv8LANZrbPmtSvxM9s",
     authDomain: "shipping-label-app-2495f.firebaseapp.com",
     projectId: "shipping-label-app-2495f",
-    storageBucket: "shipping-label-app-2495f.firebasestorage.app",
+    storageBucket: "shipping-label-app-2495f.appspot.com",
     messagingSenderId: "795393678883",
     appId: "1:795393678883:web:7ea82e207d672cffe21b96"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ========== Utility Firestore Functions ==========
+// ======= FIRESTORE Utility Functions =======
 async function getAllFromFirestore(colName) {
     const snapshot = await getDocs(collection(db, colName));
     let arr = [];
-    snapshot.forEach(doc => arr.push({ ...doc.data(), id: doc.id }));
+    snapshot.forEach(docSnap => arr.push({ ...docSnap.data(), id: docSnap.id }));
     return arr;
 }
 async function addToFirestore(colName, data) {
@@ -41,7 +33,7 @@ async function deleteFromFirestore(colName, id) {
     await deleteDoc(doc(db, colName, id));
 }
 
-// ---- DOM Elements ----
+// ========== DOM Elements ==========
 const receiverForm = document.getElementById('receiverForm');
 const saveReceiverBtn = document.getElementById('saveReceiverBtn');
 const saveUseReceiverBtn = document.getElementById('saveUseReceiverBtn');
@@ -301,7 +293,7 @@ senderForm.onsubmit = async function (e) {
 };
 senderForm.onreset = function () { senderForm.senderIndex.value = ''; };
 
-// ==== MULTI SELECT RECEIVER LOGIC (Firestore Array से) ====
+// ==== MULTI SELECT RECEIVER LOGIC ====
 // Table row checkbox
 receiverList.onclick = function (e) {
     if (e.target.classList.contains('receiver-checkbox')) {
