@@ -360,7 +360,12 @@ document.getElementById('multiPrintBtn').onclick = function () {
 
 // ==== MULTI PDF ====
 document.getElementById('multiPdfBtn').onclick = function () {
-    const { jsPDF } = window.jspdf;
+    // 👇👇👇 jsPDF को दोनों mode में लाओ (module/non-module)
+    const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+    if (!jsPDF) {
+        alert("jsPDF library लोड नहीं हुई!");
+        return;
+    }
     let doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a6" });
     let first = true;
     selectedReceiverIndexes.forEach(idx => {
