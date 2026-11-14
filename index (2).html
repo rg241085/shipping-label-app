@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shipping Label Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+</head>
+
+<body>
+    <!-- ===== Login Screen ===== -->
+    <div id="authScreen" class="auth-screen" hidden>
+        <div class="auth-card">
+            <div class="brand-logo">📦</div>
+            <h1>Shipping Label Generator</h1>
+            <p>Aage badhne ke liye login karein</p>
+            <button id="loginBtn" class="btn btn-primary btn-lg">Google se Login karein</button>
+        </div>
+    </div>
+
+    <!-- ===== Main App ===== -->
+    <div id="app" hidden>
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-logo">📦</span>
+                <div>
+                    <h1>Shipping Label Generator</h1>
+                    <small>Receiver • Sender • Label</small>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span id="userInfo" class="user-info"></span>
+                <button id="logoutBtn" class="btn btn-ghost btn-sm" hidden>Logout</button>
+            </div>
+        </header>
+
+        <main class="container">
+            <section class="grid-3">
+                <!-- Receiver Form -->
+                <div class="card">
+                    <div class="card-head">
+                        <h2>Receiver</h2>
+                        <span id="receiverMode" class="badge">New</span>
+                    </div>
+                    <form id="receiverForm" autocomplete="off" novalidate>
+                        <input type="hidden" id="receiverId">
+                        <label class="field"><span>Name *</span>
+                            <input type="text" id="receiverName" maxlength="80">
+                        </label>
+                        <label class="field"><span>Address *</span>
+                            <textarea id="receiverAddress" rows="3" maxlength="300"></textarea>
+                        </label>
+                        <div class="row-2">
+                            <label class="field"><span>Mobile *</span>
+                                <input type="tel" id="receiverMobile" inputmode="numeric" maxlength="10" placeholder="10 digit">
+                            </label>
+                            <label class="field"><span>Pin Code *</span>
+                                <input type="text" id="receiverPin" inputmode="numeric" maxlength="6" placeholder="6 digit">
+                            </label>
+                        </div>
+                        <div class="row-2">
+                            <label class="field"><span>City *</span>
+                                <input type="text" id="receiverCity" maxlength="60">
+                            </label>
+                            <label class="field"><span>State *</span>
+                                <select id="receiverState" class="state-select"></select>
+                            </label>
+                        </div>
+                        <div class="btn-row">
+                            <button type="button" id="saveReceiverBtn" class="btn btn-primary">Save</button>
+                            <button type="button" id="saveUseReceiverBtn" class="btn btn-outline">Save &amp; Use</button>
+                            <button type="reset" class="btn btn-ghost">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Label Preview -->
+                <div class="card card-preview">
+                    <div class="card-head">
+                        <h2>Label Preview</h2>
+                        <span class="hint" id="printModeHint">A6 • 105 × 148 mm</span>
+                    </div>
+                    <div class="preview-stage">
+                        <div id="labelPreview" class="preview-holder"></div>
+                    </div>
+                    <div class="btn-row">
+                        <button id="pdfBtn" class="btn btn-primary">⬇ PDF</button>
+                        <button id="printBtn" class="btn btn-outline">🖨 Print</button>
+                        <button type="button" class="btn btn-ghost ps-open" title="Print Settings">⚙️ Settings</button>
+                    </div>
+                </div>
+
+                <!-- Sender Master -->
+                <div class="card">
+                    <div class="card-head">
+                        <h2>Sender</h2>
+                        <button id="addSenderBtn" class="btn btn-primary btn-sm" type="button">+ Add Sender</button>
+                    </div>
+                    <div class="search">
+                        <input type="search" id="senderSearch" placeholder="Sender search karein...">
+                    </div>
+                    <div id="senderList" class="sender-list">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Saved Receivers -->
+            <section class="card">
+                <div class="card-head wrap">
+                    <h2>Saved Receivers <span id="receiverCount" class="badge">0</span></h2>
+                    <div class="toolbar">
+                        <div class="search">
+                            <input type="search" id="receiverSearch" placeholder="Name, mobile, city, pin...">
+                        </div>
+                        <button type="button" class="btn btn-ghost ps-open" title="Print Settings">⚙️ Print Settings</button>
+                        <button id="multiPrintBtn" class="btn btn-outline">🖨 Print (<span class="sel-count">0</span>)</button>
+                        <button id="multiPdfBtn" class="btn btn-outline">⬇ PDF (<span class="sel-count">0</span>)</button>
+                        <button id="multiExcelBtn" class="btn btn-outline">📊 Excel</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table id="receiverTable">
+                        <thead>
+                            <tr>
+                                <th class="col-check"><input type="checkbox" id="selectAll" title="Sab select karein"></th>
+                                <th>Name / Address</th>
+                                <th>Mobile</th>
+                                <th>City</th>
+                                <th>Pin</th>
+                                <th>State</th>
+                                <th class="col-action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receiverList"></tbody>
+                    </table>
+                    <div id="receiverEmpty" class="empty">Loading...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ===== Sender Modal ===== -->
+    <div id="senderModal" class="modal" hidden>
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="senderModalTitle">
+            <div class="modal-head">
+                <h3 id="senderModalTitle">Add Sender</h3>
+                <button type="button" class="icon-btn" id="closeSenderModal" title="Band karein">✕</button>
+            </div>
+            <form id="senderForm" autocomplete="off" novalidate>
+                <input type="hidden" id="senderId">
+                <label class="field"><span>Name *</span>
+                    <input type="text" id="senderName" maxlength="80">
+                </label>
+                <label class="field"><span>Address *</span>
+                    <textarea id="senderAddress" rows="3" maxlength="300"></textarea>
+                </label>
+                <div class="row-2">
+                    <label class="field"><span>Mobile *</span>
+                        <input type="tel" id="senderMobile" inputmode="numeric" maxlength="10" placeholder="10 digit">
+                    </label>
+                    <label class="field"><span>Pin Code *</span>
+                        <input type="text" id="senderPin" inputmode="numeric" maxlength="6" placeholder="6 digit">
+                    </label>
+                </div>
+                <div class="row-2">
+                    <label class="field"><span>City *</span>
+                        <input type="text" id="senderCity" maxlength="60">
+                    </label>
+                    <label class="field"><span>State *</span>
+                        <select id="senderState" class="state-select"></select>
+                    </label>
+                </div>
+                <div class="btn-row">
+                    <button type="submit" id="saveSenderBtn" class="btn btn-primary">Save Sender</button>
+                    <button type="reset" class="btn btn-ghost">Clear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== Print Settings Modal ===== -->
+    <div id="printModal" class="modal" hidden>
+        <div class="modal-box lg" role="dialog" aria-modal="true" aria-labelledby="psTitle">
+            <div class="modal-head">
+                <h3 id="psTitle">🖨 Print Settings</h3>
+                <button type="button" class="icon-btn" id="closePrintModal" title="Band karein">✕</button>
+            </div>
+
+            <div class="ps-layout">
+                <div>
+                    <div class="field">
+                        <span>1. Aap kaise print karte hain?</span>
+                        <div class="opt-group">
+                            <label class="opt"><input type="radio" name="pmode" value="a6a4">
+                                <div><b>A6 kaagaz — A4 setting par</b>
+                                    <small>Sabse sahi tareeka. Label wahin chhapega jahan printer mein A6 kaagaz lagta hai.</small></div>
+                            </label>
+                            <label class="opt"><input type="radio" name="pmode" value="a6">
+                                <div><b>A6 kaagaz — A6 setting par</b>
+                                    <small>Sirf tab, jab printer driver mein A6 size sahi kaam karta ho.</small></div>
+                            </label>
+                            <label class="opt"><input type="radio" name="pmode" value="a4x4">
+                                <div><b>A4 kaagaz — 4 label ek page par</b>
+                                    <small>Poori A4 sheet par 4 label (kaat kar use karein).</small></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="field" id="alignBox">
+                        <span>2. Printer mein A6 kaagaz kahan lagta hai?</span>
+                        <div class="align-group">
+                            <label class="align-opt"><input type="radio" name="palign" value="left">
+                                <span class="tray"><i style="left:0"></i></span><b>Left side</b></label>
+                            <label class="align-opt"><input type="radio" name="palign" value="center">
+                                <span class="tray"><i style="left:14px"></i></span><b>Beech mein</b><small>Canon, HP</small></label>
+                            <label class="align-opt"><input type="radio" name="palign" value="right">
+                                <span class="tray"><i style="left:28px"></i></span><b>Right side</b></label>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <span>3. Fine adjust (mm) — agar thoda khiska hua aaye</span>
+                        <div class="row-2">
+                            <label class="field mini"><small>← Left / Right →</small>
+                                <input type="number" id="psOffsetX" step="0.5" min="-30" max="30" value="0"></label>
+                            <label class="field mini"><small>↑ Upar / Neeche ↓</small>
+                                <input type="number" id="psOffsetY" step="0.5" min="-30" max="30" value="0"></label>
+                        </div>
+                        <small class="hint">Label left mein khiska ho to X badhayein (+), right mein ho to ghatayein (−).</small>
+                    </div>
+                </div>
+
+                <div class="ps-side">
+                    <div class="demo-title" id="psDemoTitle">Page</div>
+                    <div class="paper-demo" id="psDemo"></div>
+                    <div class="demo-legend"><i></i> Label yahan chhapega</div>
+                </div>
+            </div>
+
+            <div class="ps-tip">
+                <b>Print window mein ye zaroor rakhein:</b>
+                Paper size: <b id="psTipPaper">A4</b> • Margins: <b>None</b> • Scale: <b>100% / Default</b>
+                (“Fit to page” nahi) • Headers and footers: <b>Off</b>
+            </div>
+
+            <div class="btn-row end">
+                <button type="button" id="psTestBtn" class="btn btn-outline">🧪 Test Print</button>
+                <button type="button" id="psSaveBtn" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Confirm Modal ===== -->
+    <div id="confirmModal" class="modal" hidden>
+        <div class="modal-box sm" role="alertdialog" aria-modal="true">
+            <div class="modal-head">
+                <h3>Pakka?</h3>
+            </div>
+            <p id="confirmText" class="confirm-text"></p>
+            <div class="btn-row end">
+                <button type="button" id="confirmCancel" class="btn btn-ghost">Cancel</button>
+                <button type="button" id="confirmOk" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <div id="renderArea" class="render-area" aria-hidden="true"></div>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
